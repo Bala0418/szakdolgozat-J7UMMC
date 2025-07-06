@@ -1,0 +1,40 @@
+
+# Playwright
+**/node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/
+
+# Test reporting
+allure-results/
+allure-report/
+test-reports
+test-reports.html
+
+# User specific variables
+.env*
+
+# Other code and packaging artifacts
+dist/
+out/
+target/
+.eslintcache
+.parcel-cache
+*.js
+*.tsbuildinfo
+*.d.ts
+
+# IDE and plugin related
+.idea/*
+.idea-modules/
+*.iml
+.vscode/*
+bamboo-specs/.factorypath
+.project
+.classpath
+.settings/
+
+# Exclude important files
+!**/functionDocs/*.d.ts
+!/*.js

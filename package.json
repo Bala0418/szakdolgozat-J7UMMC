@@ -1,0 +1,58 @@
+{
+  "name": "szakdolgozat-j7ummc",
+  "version": "1.0.0",
+  "engines": {
+    "npm": "^10.4.0"
+  },
+  "description": "",
+  "scripts": {
+    "playwright-install": "npx playwright install --with-deps",
+    "test": "npm run clean && npx playwright test",
+    "clean": "rimraf ./allure-report/ ./allure-results/",
+    "report": "allure generate allure-results -o allure-report --clean && allure open allure-report",
+    "lint-check": "eslint \"*/**/*.ts\"",
+    "lint": "eslint --fix \"*/**/*.ts\"",
+    "format-check": "prettier --check \"*.{ts,js}\"",
+    "format": "prettier --write \"*.{ts,js}\"",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bala0418/szakdolgozat-J7UMMC.git"
+  },
+  "keywords": [],
+  "author": "Radócz Balázs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bala0418/szakdolgozat-J7UMMC/issues"
+  },
+  "homepage": "https://github.com/Bala0418/szakdolgozat-J7UMMC#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.53.2",
+    "@types/node": "^24.0.10"
+  },
+  "dependencies": {
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.35.1",
+    "@typescript-eslint/parser": "^8.35.1",
+    "allure-commandline": "^2.34.1",
+    "allure-playwright": "^3.3.0",
+    "dotenv": "^17.0.1",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin": "^1.0.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-standard": "^4.1.0",
+    "husky": "^9.1.7",
+    "import": "^0.0.6",
+    "lint-staged": "^16.1.2",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "uuid": "^11.1.0"
+  }
+}
