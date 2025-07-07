@@ -19,6 +19,6 @@ test.describe('Home page tests', async () => {
   });
 
   test('The "Home Page" title should be visible on the Home page', async () => {
-    await homePage.assertHomePageTitleText();
+    await homePage.then.assertHomePageTitleText();
   })
 });
