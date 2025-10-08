@@ -6,7 +6,7 @@ let homePage: HomePage;
 
 test.describe('Home page tests', async () => {
   test.beforeEach('Open and set up fresh page', async ({ page }) => {
-    await test.step('Navigate to the LUMA Home page', async () => {
+    await test.step('Navigate to the Tool Shop Home page', async () => {
       await page.goto('/', { waitUntil: 'domcontentloaded' });
     });
 
@@ -20,5 +20,9 @@ test.describe('Home page tests', async () => {
 
   test('The "Home Page" title should be visible on the Home page', async () => {
     await homePage.then.assertHomePageTitleText();
-  })
+  });
+
+  test('The "Home Page" should have everything visible', async () => {
+    await homePage.then.assertHomePageHasEverythingVisible();
+  });
 });
