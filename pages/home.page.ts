@@ -1,4 +1,4 @@
-import test, { expect, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
 import { initSelectors } from "./home.page.selectors";
 import { initWhenSteps } from "../steps/home.page.when";
 import { initThenSteps } from "../steps/home.page.then";

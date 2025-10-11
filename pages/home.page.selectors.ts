@@ -11,6 +11,8 @@ export function initSelectors(instance: HomePage, page: Page) {
 
     instance.priceRangeTitle = instance.filters.getByText('Price Range');
     instance.priceRangeSlider = instance.filters.locator('.ngx-slider');
+    instance.priceRangeMin = instance.priceRangeSlider.locator('.ngx-slider-pointer-min');
+    instance.priceRangeMax = instance.priceRangeSlider.locator('.ngx-slider-pointer-max');
 
     instance.searchTitle = instance.filters.locator('h4').getByText('Search', {exact: true});
     instance.searchTextField = instance.filters.getByTestId('search-query');
@@ -50,6 +52,9 @@ export function initSelectors(instance: HomePage, page: Page) {
 
     // Locators for goods
     instance.itemsGrid = page.locator('.row .container');
+    instance.items = instance.itemsGrid.locator('a.card');
+    instance.itemName = instance.items.getByTestId('product-name');
+    instance.itemPrice = instance.items.getByTestId('product-price');
 
     // Locators for pagination
     instance.pagination = page.locator('.pagination');
@@ -65,6 +70,8 @@ declare module './home.page' {
         sortDropdown: Locator;
         priceRangeTitle: Locator;
         priceRangeSlider: Locator;
+        priceRangeMin: Locator;
+        priceRangeMax: Locator;
         searchTitle: Locator;
         searchTextField: Locator;
         searchTextFieldClearButton: Locator;
@@ -100,6 +107,9 @@ declare module './home.page' {
 
         // Locators for goods
         itemsGrid: Locator;
+        items: Locator;
+        itemName: Locator;
+        itemPrice: Locator;
 
         // Locators for pagination
         pagination: Locator;
