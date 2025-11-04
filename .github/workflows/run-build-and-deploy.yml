@@ -1,0 +1,110 @@
+name: Build & Deploy (run tests, generate Allure, upload to GitHub Release)
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'git ref to deploy (branch or tag)'
+        required: true
+        default: 'main'
+  push:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: |
+          # test script in package.json should produce allure-results/ folder
+          npm run test
+
+      - name: Install Allure CLI
+        run: npm install -g allure-commandline --no-save
+
+      - name: Generate Allure report
+        run: |
+          mkdir -p allure-report
+          allure generate allure-results --clean -o allure-report
+
+      - name: Zip Allure report
+        run: zip -9 -r allure-report.zip allure-report
+
+      - name: Install Google Chrome for screenshot
+        run: |
+          wget -q -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt-get update -y
+          sudo apt-get install -y /tmp/google-chrome.deb || sudo apt-get -f install -y
+
+      - name: Make Allure Report screenshot (headless Chrome)
+        run: |
+          # ensure index exists
+          if [ ! -f ./allure-report/index.html ]; then
+            echo "Allure report not found" && exit 1
+          fi
+          google-chrome --no-sandbox --headless --allow-file-access-from-files --window-size=1920,1080 --screenshot=report.png ./allure-report/index.html
+
+      - name: Create GitHub Release for Allure report
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: allure-${{ github.run_id }}
+          release_name: "Allure report ${{ github.run_number }}"
+          body: "Automated Allure report for run ${{ github.run_id }}"
+          draft: false
+          prerelease: false
+
+      - name: Upload Allure ZIP to release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./allure-report.zip
+          asset_name: allure-report-${{ github.run_id }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload screenshot to release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./report.png
+          asset_name: report.png
+          asset_content_type: image/png
+
+      - name: Update release body with embedded screenshot and ZIP link
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const tag = '${{ steps.create_release.outputs.tag_name }}';
+            const runDay = new Date().toISOString().slice(0,10);
+            const imgUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/report.png`;
+            const zipName = `allure-report-${{ github.run_id }}.zip`;
+            const zipUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/${zipName}`;
+            const body = `Automated UI test report - ${runDay}\n\n![Allure screenshot](${imgUrl})\n\n[Download Allure ZIP](${zipUrl})`;
+            await github.rest.repos.updateRelease({
+              owner, repo,
+              release_id: parseInt('${{ steps.create_release.outputs.id }}'),
+              body,
+            });

@@ -16,7 +16,7 @@ export default defineConfig({
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Given time for test cases */
-  timeout: 30*1000,
+  timeout: 30 * 1000,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI 2 times, and locally 1 time */
@@ -28,7 +28,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     ...devices['Desktop Chrome'],
-    headless: true,
+    headless: process.env.CI ? true : false,
     viewport: {
       width: 1920,
       height: 1080,
@@ -36,8 +36,8 @@ export default defineConfig({
     deviceScaleFactor: undefined,
     launchOptions: { args: ['--start-maximized'] },
     permissions: ['clipboard-read'],
-    baseURL: 'https://magento.softwaretestingboard.com/',
-    testIdAttribute: 'id',
+    baseURL: 'https://practicesoftwaretesting.com/',
+    testIdAttribute: 'data-test',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
