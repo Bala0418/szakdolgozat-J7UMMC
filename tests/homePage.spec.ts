@@ -55,4 +55,21 @@ test.describe('Home page tests', async () => {
     await homePage.then.assertItemCount(expectedItemCount);
     await homePage.then.assertItemNamesContainText(searchTerm);
   });
+
+  test('The search field should be empty after clicking on the Search Reset button', async () => {
+    const inputText = 'drill';
+    await homePage.when.clickOnSearchField();
+    await homePage.when.typeInSearchField(inputText);
+    await homePage.when.clickOnSearchResetButton();
+    await homePage.then.assertSearchFieldIsEmpty();
+  });
+
+  test('The item names on the main page should contain the text from the Search field after performing a search', async () => {
+    const searchTerm = 'saw';
+    await homePage.when.clickOnSearchField();
+    await homePage.when.typeInSearchField(searchTerm);
+    await homePage.when.clickOnSearchSubmitButton();
+    await homePage.when.waitForItemListToDinamicallyReload();
+    await homePage.then.assertItemNamesContainText(searchTerm);
+  });
 });
