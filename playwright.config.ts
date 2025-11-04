@@ -28,7 +28,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     ...devices['Desktop Chrome'],
-    headless: false,
+    headless: process.env.CI ? true : false,
     viewport: {
       width: 1920,
       height: 1080,

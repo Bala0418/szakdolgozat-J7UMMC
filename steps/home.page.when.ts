@@ -88,8 +88,8 @@ export function initWhenSteps(instance: HomePage) {
             );
         },
 
-        async waitForItemListToDinamicallyReload() {
-            await test.step('When the item list to dinamically reload is waited for', async () => {
+        async waitForItemListToDynamicallyReload() {
+            await test.step('When the item list to dynamically reload is waited for', async () => {
                 await instance.page.waitForLoadState('networkidle');
             });
         },

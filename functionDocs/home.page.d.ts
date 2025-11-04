@@ -47,9 +47,9 @@ export interface HomePageWhenSteps extends CommonPageWhenSteps {
     setPriceRangeSlider(minPrice: number, maxPrice: number): Promise<void>;
 
     /**
-     * Waits for the item list to dinamically reload after setting a filter or performing a search
+     * Waits for the item list to dynamically reload after setting a filter or performing a search
      */
-    waitForItemListToDinamicallyReload(): Promise<void>;
+    waitForItemListToDynamicallyReload(): Promise<void>;
 }
 
 export interface HomePageThenSteps {

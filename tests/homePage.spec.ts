@@ -31,7 +31,7 @@ test.describe('Home page tests', async () => {
     const minPrice = 10;
     const maxPrice = 50;
     await homePage.when.setPriceRangeSlider(minPrice, maxPrice);
-    await homePage.when.waitForItemListToDinamicallyReload();
+    await homePage.when.waitForItemListToDynamicallyReload();
     await homePage.then.assertItemsPrices(minPrice, maxPrice);
   });
   
@@ -69,7 +69,7 @@ test.describe('Home page tests', async () => {
     await homePage.when.clickOnSearchField();
     await homePage.when.typeInSearchField(searchTerm);
     await homePage.when.clickOnSearchSubmitButton();
-    await homePage.when.waitForItemListToDinamicallyReload();
+    await homePage.when.waitForItemListToDynamicallyReload();
     await homePage.then.assertItemNamesContainText(searchTerm);
   });
 });
