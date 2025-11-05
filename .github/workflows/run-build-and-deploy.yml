@@ -191,7 +191,7 @@ jobs:
           </head><body><h1>Allure reports (latest 25)</h1><ul>
           HTML
 
-          for d in $(ls -1t allure | head -n 25); do
+          for d in $(ls -1t allure | grep -v '^latest$' | head -n 25); do
             if [ -d "allure/${d}" ]; then
               # human-friendly label from folder name (keep the tag name)
               echo "<li class=\"item\"><a href=\"./allure/${d}/index.html\">${d}</a> &nbsp; <small><a href=\"./allure/${d}/\">open</a></small></li>" >> index.html
