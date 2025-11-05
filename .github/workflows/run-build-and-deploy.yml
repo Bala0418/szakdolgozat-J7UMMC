@@ -116,7 +116,7 @@ jobs:
             const tag = process.env.TAG;
             const runDay = new Date().toISOString().slice(0,10);
             const imgUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/report.png`;
-            const zipName = `allure-report-${process.env.GITHUB_RUN_ID}.zip`;
+            const zipName = `allure-report-${context.runId}.zip`;
             const zipUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/${zipName}`;
             const pagesReportUrl = `https://${owner}.github.io/${repo}/allure/${tag}/index.html`;
             const pagesIndexUrl = `https://${owner}.github.io/${repo}/index.html`;
