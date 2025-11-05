@@ -66,15 +66,23 @@ jobs:
           fi
           google-chrome --no-sandbox --headless --allow-file-access-from-files --window-size=1920,1080 --screenshot=report.png ./allure-report/index.html
 
+      - name: Prepare release metadata
+        id: prep_release
+        run: |
+          TAG="allure-${GITHUB_RUN_ID}"
+          RELEASE_NAME="Allure report - $(date +'%Y.%m.%d. %H:%M')"
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+
       - name: Create GitHub Release for Allure report
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: allure-${{ github.run_id }}
-          release_name: "Allure report ${{ github.run_number }}"
-          body: "Automated Allure report for run ${{ github.run_id }}"
+          tag_name: ${{ env.TAG }}
+          release_name: ${{ env.RELEASE_NAME }}
+          body: "Automated Allure report for run ${{ github.run_id }} - ${{ env.RELEASE_NAME }}"
           draft: false
           prerelease: false
 
@@ -105,14 +113,15 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const tag = '${{ steps.create_release.outputs.tag_name }}';
+            const tag = process.env.TAG;
             const runDay = new Date().toISOString().slice(0,10);
             const imgUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/report.png`;
-            const zipName = `allure-report-${{ github.run_id }}.zip`;
+            const zipName = `allure-report-${process.env.GITHUB_RUN_ID}.zip`;
             const zipUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/${zipName}`;
             const body = `Automated UI test report - ${runDay}\n\n![Allure screenshot](${imgUrl})\n\n[Download Allure ZIP](${zipUrl})`;
             await github.rest.repos.updateRelease({
-              owner, repo,
+              owner,
+              repo,
               release_id: parseInt('${{ steps.create_release.outputs.id }}'),
               body,
             });
