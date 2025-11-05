@@ -175,7 +175,7 @@ jobs:
 
           # prune older than 25 (keep newest 25 by mtime)
           pushd "${WORKDIR}/allure" >/dev/null
-          to_delete=$(ls -1t | sed -n '26,$p' || true)
+          to_delete=$(ls -1t | grep -v '^latest$' | sed -n '26,$p' || true)
           if [ -n "$to_delete" ]; then
             echo "Removing old reports:"
             echo "$to_delete"
