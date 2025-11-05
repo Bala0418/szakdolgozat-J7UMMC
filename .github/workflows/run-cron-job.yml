@@ -2,7 +2,7 @@ name: Scheduled weekly deploy (trigger run-build-and-deploy.yml)
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: '0 * * * *' # every Monday at 10:00 UTC
+    - cron: '0 10 * * 1' # every Monday at 10:00 UTC
 
 permissions:
   actions: write
