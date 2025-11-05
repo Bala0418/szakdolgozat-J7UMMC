@@ -17,6 +17,8 @@ jobs:
   deploy-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,18 +66,30 @@ jobs:
           fi
           google-chrome --no-sandbox --headless --allow-file-access-from-files --window-size=1920,1080 --screenshot=report.png ./allure-report/index.html
 
+      - name: Prepare release metadata
+        id: prep_release
+        run: |
+          TAG="allure-${GITHUB_RUN_ID}"
+          RELEASE_NAME="Allure report - $(date +'%Y.%m.%d. %H:%M')"
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
+
       - name: Create GitHub Release for Allure report
         id: create_release
         uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: allure-${{ github.run_id }}
-          release_name: "Allure report ${{ github.run_number }}"
-          body: "Automated Allure report for run ${{ github.run_id }}"
+          tag_name: ${{ env.TAG }}
+          release_name: ${{ env.RELEASE_NAME }}
+          body: "Automated Allure report for run ${{ github.run_id }} - ${{ env.RELEASE_NAME }}"
           draft: false
           prerelease: false
 
       - name: Upload Allure ZIP to release
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./allure-report.zip
@@ -84,6 +98,8 @@ jobs:
 
       - name: Upload screenshot to release
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./report.png
@@ -97,14 +113,99 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const tag = '${{ steps.create_release.outputs.tag_name }}';
+            const tag = '${{ env.TAG }}';
             const runDay = new Date().toISOString().slice(0,10);
             const imgUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/report.png`;
-            const zipName = `allure-report-${{ github.run_id }}.zip`;
+            const zipName = `allure-report-${context.runId}.zip`;
             const zipUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/${zipName}`;
-            const body = `Automated UI test report - ${runDay}\n\n![Allure screenshot](${imgUrl})\n\n[Download Allure ZIP](${zipUrl})`;
+            const pagesReportUrl = `https://${owner}.github.io/${repo}/allure/${tag}/index.html`;
+            const pagesIndexUrl = `https://${owner}.github.io/${repo}/index.html`;
+            const body = [
+              `Automated UI test report - ${runDay}`,
+              ``,
+              `![Allure screenshot](${imgUrl})`,
+              ``,
+              `[Download Allure ZIP](${zipUrl})`,
+              ``,
+              `Pages (public):`,
+              `- Current report: ${pagesReportUrl}`,
+              `- All reports index: ${pagesIndexUrl}`
+            ].join('\n');
             await github.rest.repos.updateRelease({
-              owner, repo,
+              owner,
+              repo,
               release_id: parseInt('${{ steps.create_release.outputs.id }}'),
               body,
             });
+
+      - name: Publish Allure report to GitHub Pages (global, keep last 25)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${TAG:-allure-${GITHUB_RUN_ID}}"
+          REPO="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          WORKDIR=ghpages_tmp
+
+          rm -rf "$WORKDIR"
+          if git clone --depth 1 --branch gh-pages "$REPO" "$WORKDIR" 2>/dev/null; then
+            echo "Cloned existing gh-pages"
+          else
+            echo "gh-pages not found — creating new gh-pages worktree"
+            mkdir -p "$WORKDIR"
+            pushd "$WORKDIR"
+            git init
+            git remote add origin "$REPO"
+            git checkout --orphan gh-pages || true
+            popd
+          fi
+
+          mkdir -p "${WORKDIR}/allure/${TAG}"
+          cp -r ./allure-report/* "${WORKDIR}/allure/${TAG}/"
+
+          # preserve history from previous latest (helps Allure trends)
+          if [ -d "${WORKDIR}/allure/latest/history" ]; then
+            mkdir -p "${WORKDIR}/allure/${TAG}/history"
+            cp -r "${WORKDIR}/allure/latest/history/"* "${WORKDIR}/allure/${TAG}/history/" || true
+          fi
+
+          # update 'latest'
+          rm -rf "${WORKDIR}/allure/latest"
+          cp -r "${WORKDIR}/allure/${TAG}" "${WORKDIR}/allure/latest"
+
+          # prune older than 25 (keep newest 25 by mtime)
+          pushd "${WORKDIR}/allure" >/dev/null
+          to_delete=$(ls -1t | grep -v '^latest$' | sed -n '26,$p' || true)
+          if [ -n "$to_delete" ]; then
+            echo "Removing old reports:"
+            echo "$to_delete"
+            echo "$to_delete" | xargs -r rm -rf
+          fi
+          popd >/dev/null
+
+          # generate root index with latest 25
+          pushd "$WORKDIR" >/dev/null
+          cat > index.html <<'HTML'
+          <!doctype html><html><head><meta charset="utf-8"><title>Allure Reports</title>
+          <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px} .item{margin:8px 0;padding:8px;border:1px solid #eee;border-radius:6px}</style>
+          </head><body><h1>Allure reports (latest 25)</h1><ul>
+          HTML
+
+          for d in $(ls -1t allure | grep -v '^latest$' | head -n 25); do
+            if [ -d "allure/${d}" ]; then
+              # human-friendly label from folder name (keep the tag name)
+              echo "<li class=\"item\"><a href=\"./allure/${d}/index.html\">${d}</a> &nbsp; <small><a href=\"./allure/${d}/\">open</a></small></li>" >> index.html
+            fi
+          done
+
+          cat >> index.html <<'HTML'
+          </ul><p>Latest: <a href="./allure/latest/index.html">open latest</a></p>
+          </body></html>
+          HTML
+
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="github-actions[bot]@users.noreply.github.com" commit -m "Publish Allure report ${TAG} (run ${GITHUB_RUN_ID})" || echo "No changes to commit"
+          git push "$REPO" gh-pages
+          popd >/dev/null
+
+          echo "Published: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY##*/}/allure/${TAG}/index.html"
