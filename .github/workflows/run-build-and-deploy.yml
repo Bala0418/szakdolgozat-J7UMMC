@@ -113,7 +113,7 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const tag = process.env.TAG;
+            const tag = '${{ env.TAG }}';
             const runDay = new Date().toISOString().slice(0,10);
             const imgUrl = `https://github.com/${owner}/${repo}/releases/download/${tag}/report.png`;
             const zipName = `allure-report-${context.runId}.zip`;
